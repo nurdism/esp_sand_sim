@@ -5,6 +5,8 @@ a 466x466 round AMOLED (CO5300, QSPI) with CST9217 touch, a QMI8658 IMU, and
 an AXP2101 PMIC. Tilt the board and the sand pours toward the low edge; touch
 the glass to paint materials in; set fire to things.
 
+Video: https://youtu.be/Gdmk3TZFWq0
+
 Rendering goes straight to the panel over QSPI — no LVGL, no framebuffer in
 PSRAM — painted and pushed a band at a time from internal DMA memory, with
 per-row dirty tracking so only what changed gets sent.
