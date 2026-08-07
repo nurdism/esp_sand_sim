@@ -1,0 +1,51 @@
+CONFIG_IDF_TARGET="esp32s3"
+
+# Flash / partitions (board has 32 MB QIO flash)
+CONFIG_ESPTOOLPY_FLASHMODE_QIO=y
+CONFIG_ESPTOOLPY_FLASHSIZE_32MB=y
+CONFIG_PARTITION_TABLE_CUSTOM=y
+CONFIG_PARTITION_TABLE_CUSTOM_FILENAME="partitions.csv"
+
+# Octal PSRAM - the 466x466 RGB565 framebuffer lives here
+CONFIG_SPIRAM=y
+CONFIG_SPIRAM_MODE_OCT=y
+CONFIG_SPIRAM_SPEED_80M=y
+CONFIG_SPIRAM_MALLOC_ALWAYSINTERNAL=0
+
+# Performance. Deliberately NOT using SPIRAM_FETCH_INSTRUCTIONS /
+# SPIRAM_RODATA / SPIRAM_XIP_FROM_PSRAM: those move .text into PSRAM, which
+# the demos want in order to free flash-cache bandwidth for LVGL. This app is
+# a tight per-cell loop instead, and running it out of PSRAM costs far more
+# than it saves.
+CONFIG_ESP_DEFAULT_CPU_FREQ_MHZ_240=y
+CONFIG_COMPILER_OPTIMIZATION_PERF=y
+CONFIG_FREERTOS_HZ=1000
+CONFIG_ESP32S3_INSTRUCTION_CACHE_32KB=y
+CONFIG_ESP32S3_DATA_CACHE_64KB=y
+CONFIG_ESP32S3_DATA_CACHE_LINE_64B=y
+
+# Make a wedged frame loop announce itself. Without this a task blocked in a
+# driver call that never returns just goes quiet, with no banner and no clue
+# where it stopped. Panicking instead dumps a backtrace of the stuck task.
+CONFIG_ESP_TASK_WDT_INIT=y
+CONFIG_ESP_TASK_WDT_PANIC=y
+# Long enough that the 2 s monitor task gets to report the stuck stage before
+# the watchdog panics and reboots.
+CONFIG_ESP_TASK_WDT_TIMEOUT_S=10
+
+# USB mass storage, so scene PNGs can be dropped onto the flash from a PC.
+# The device stack is only installed when the settings ring asks for it, so
+# enabling it here costs nothing at boot and the serial console stays put.
+CONFIG_TINYUSB_MSC_ENABLED=y
+# Must be at least CONFIG_WL_SECTOR_SIZE, which defaults to 4096; the storage
+# layer refuses to initialise otherwise.
+CONFIG_TINYUSB_MSC_BUFSIZE=4096
+CONFIG_TINYUSB_DESC_MANUFACTURER_STRING="Nurdism"
+CONFIG_TINYUSB_DESC_PRODUCT_STRING="Sand Sim"
+CONFIG_TINYUSB_DESC_MSC_STRING="Sand Sim Scenes"
+
+# LVGL comes in with the BSP but this app draws straight to the panel.
+CONFIG_LV_USE_CLIB_MALLOC=y
+CONFIG_LV_USE_CLIB_STRING=y
+CONFIG_LV_USE_CLIB_SPRINTF=y
+CONFIG_LV_OS_FREERTOS=y

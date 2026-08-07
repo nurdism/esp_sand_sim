@@ -1,0 +1,15 @@
+## IDF Component Manager Manifest File
+##
+## Deliberately no board support package: the vendor BSP for this board pulls
+## in LVGL, an LVGL adapter, and an audio codec stack that never run. The
+## handful of init calls the hardware actually needs live in sand_board.c,
+## on top of just the two drivers below.
+dependencies:
+  espressif/esp_lcd_co5300:
+    version: "^2.1"
+  waveshare/esp_lcd_touch_cst9217:
+    version: "*"
+  espressif/libpng:
+    version: "^1.6"
+  espressif/esp_tinyusb:
+    version: "^1.7"

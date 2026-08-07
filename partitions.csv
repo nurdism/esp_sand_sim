@@ -1,0 +1,10 @@
+# ESP-IDF Partition Table
+# Name,   Type, SubType, Offset,   Size,
+nvs,      data, nvs,     0x9000,   0x6000,
+phy_init, data, phy,     0xf000,   0x1000,
+factory,  app,  factory, 0x10000,  8M,
+# Saved scenes. Raw rather than a filesystem: a scene is one fixed-size blob,
+# so a slot is just an offset and there is nothing to mount or corrupt.
+scenes,   data, undefined, ,       512K,
+# FAT for the USB drive. Wear levelled, and the only thing the host ever sees.
+storage,  data, fat,       ,       4M,
