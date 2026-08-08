@@ -12,7 +12,7 @@ Board: [store](https://www.waveshare.com/esp32-s3-touch-amoled-1.75c.htm) ·
 
 ## Flash it from your browser
 
-Go to **https://esp_sand.nurdism.dev**, plug the board in over USB-C
+Go to **https://esp-sand.nurdism.dev**, plug the board in over USB-C
 and hit Install, it flashes right from the page over Web Serial (Chrome or
 Edge on desktop). No ESP-IDF, nothing to download. If no serial port shows
 up hold **BOOT** while plugging it in, the firmware's USB drive mode likes
