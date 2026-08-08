@@ -1,0 +1,550 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sand Sim — Web Flasher</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏳</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  html { scroll-behavior: smooth; }
+  body { margin: 0; background: #EDE7DC; color: #1A1713; font-family: "Archivo", system-ui, sans-serif; -webkit-font-smoothing: antialiased; }
+  ::selection { background: #C2410C; color: #FFF6F0; }
+  a { color: #C2410C; text-decoration: none; border-bottom: 1px solid rgba(194,65,12,.35); }
+  a:hover { color: #8A2C05; border-bottom-color: #8A2C05; }
+  @keyframes sandpulse { 0%,100% { opacity: .35 } 50% { opacity: .9 } }
+  ::-webkit-scrollbar { width: 9px; height: 9px }
+  ::-webkit-scrollbar-thumb { background: rgba(194,65,12,.28) }
+  ::-webkit-scrollbar-track { background: transparent }
+
+  .navlink { color: #57514A; border: 0; }
+  .navlink:hover { color: #C2410C; }
+  .footlink { border: 0; color: #7B7369; }
+  .footlink:hover { color: #C2410C; }
+
+  .btn-cta { border: 0; background: #C2410C; color: #FFF6F0; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 13px; letter-spacing: .1em; padding: 15px 26px; border-radius: 2px; box-shadow: 4px 4px 0 rgba(0,0,0,.35); }
+  .btn-cta:hover { background: #8A2C05; color: #FFF6F0; box-shadow: 6px 6px 0 rgba(0,0,0,.35); }
+  .btn-ghost { border: 1px solid rgba(194,65,12,.3); color: #1A1713; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: .1em; padding: 15px 24px; border-radius: 2px; }
+  .btn-ghost:hover { border-color: #C2410C; color: #C2410C; }
+
+  .btn-install { width: 100%; font-family: 'JetBrains Mono', monospace; font-weight: 700; font-size: 15px; letter-spacing: .12em; padding: 20px; border: 0; border-radius: 2px; cursor: pointer; color: #FFF6F0; background: linear-gradient(180deg, #E2571C, #A8360A); box-shadow: 5px 5px 0 rgba(0,0,0,.35); }
+  .btn-install:hover:not(:disabled) { filter: brightness(1.07); }
+  .btn-install:active:not(:disabled) { transform: translate(2px,2px); box-shadow: 2px 2px 0 rgba(0,0,0,.35); }
+  .btn-install:disabled { opacity: .45; cursor: not-allowed; }
+
+  .h-hero { margin: 0 0 22px; font-size: clamp(42px, 7.5vw, 74px); line-height: .94; letter-spacing: -.035em; font-weight: 800; }
+  .h-sec { margin: 0 0 14px; font-size: clamp(30px, 4.5vw, 42px); line-height: 1.05; letter-spacing: -.03em; font-weight: 800; }
+
+  .wrap { max-width: 1240px; margin: 0 auto; padding: 0 32px 96px; }
+  .hero { display: grid; grid-template-columns: 1.05fr .95fr; gap: 56px; align-items: center; padding: 72px 0 64px; }
+  .flashgrid { display: grid; grid-template-columns: 1fr 1.15fr; gap: 0; }
+  .flashleft { padding: 30px 28px; border-right: 1px solid rgba(194,65,12,.14); }
+  .matgrid { display: grid; grid-template-columns: repeat(4,1fr); gap: 1px; background: rgba(194,65,12,.14); border: 1px solid rgba(194,65,12,.14); }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; padding: 96px 0 0; align-items: start; }
+  .scenegrid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: rgba(194,65,12,.14); border: 1px solid rgba(194,65,12,.14); }
+  .modegrid { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; background: rgba(194,65,12,.14); border: 1px solid rgba(194,65,12,.14); border-top: 0; }
+  .buildband { margin-top: 96px; border: 1px solid rgba(194,65,12,.2); background: #F8F5EF; padding: 38px 34px; display: grid; grid-template-columns: 1fr auto; gap: 32px; align-items: center; }
+
+  @media (max-width: 900px) {
+    .wrap { padding: 0 20px 72px; }
+    .hero { grid-template-columns: 1fr; gap: 40px; padding: 48px 0 48px; }
+    .flashgrid { grid-template-columns: 1fr; }
+    .flashleft { border-right: 0; border-bottom: 1px solid rgba(194,65,12,.14); }
+    .matgrid { grid-template-columns: repeat(2,1fr); }
+    .duo { grid-template-columns: 1fr; gap: 48px; padding: 72px 0 0; }
+    .scenegrid { grid-template-columns: 1fr; }
+    .modegrid { grid-template-columns: 1fr; }
+    .buildband { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 560px) {
+    .matgrid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div style="min-height:100vh; background:
+    radial-gradient(1200px 800px at 78% -8%, rgba(194,65,12,.10), transparent 62%),
+    radial-gradient(900px 700px at -8% 108%, rgba(194,65,12,.05), transparent 60%),
+    #EDE7DC;">
+
+  <div class="wrap">
+
+    <div style="display:flex; align-items:center; justify-content:space-between; gap:24px; padding:26px 0; border-bottom:1px solid rgba(194,65,12,.14); flex-wrap:wrap;">
+      <div style="display:flex; align-items:center; gap:12px;">
+        <div style="width:26px; height:26px; border-radius:50%; border:1.5px solid #C2410C; display:grid; place-items:center;">
+          <div style="width:9px; height:9px; border-radius:50%; background:#C2410C;"></div>
+        </div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:13px; letter-spacing:.14em; text-transform:uppercase; color:#1A1713;">Sand&nbsp;Sim</div>
+        <div id="verTop" style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#7B7369;">firmware —</div>
+      </div>
+      <div style="display:flex; align-items:center; gap:26px; font-family:'JetBrains Mono',monospace; font-size:12.5px; letter-spacing:.06em;">
+        <a href="#flash" class="navlink">FLASH</a>
+        <a href="#materials" class="navlink">MATERIALS</a>
+        <a href="#scenes" class="navlink">SCENES</a>
+        <a href="https://github.com/nurdism/esp_sand_sim" class="navlink">GITHUB</a>
+      </div>
+    </div>
+
+    <div class="hero">
+      <div>
+        <div style="display:inline-flex; align-items:center; gap:9px; font-family:'JetBrains Mono',monospace; font-size:11.5px; letter-spacing:.18em; color:#C2410C; border:1px solid rgba(194,65,12,.3); padding:6px 12px; border-radius:999px; margin-bottom:26px;">
+          <span style="width:6px; height:6px; border-radius:50%; background:#9ECF6B; animation:sandpulse 2s ease-in-out infinite;"></span>
+          ESP32-S3 · 466×466 AMOLED
+        </div>
+        <h1 class="h-hero">
+          A sand sim for a<br>
+          <span style="color:#C2410C;">little round screen</span>.
+        </h1>
+        <p style="margin:0 0 30px; font-size:19px; line-height:1.55; color:#57514A; max-width:34em; text-wrap:pretty;">
+          Runs on the Waveshare ESP32-S3-Touch-AMOLED-1.75C. Tilt the board and the sand pours toward the low edge, touch the glass to paint materials in, set fire to things.
+        </p>
+        <div style="display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-bottom:34px;">
+          <a href="#flash" class="btn-cta">FLASH IT</a>
+          <a href="https://www.waveshare.com/esp32-s3-touch-amoled-1.75c.htm" class="btn-ghost">BUY THE BOARD</a>
+        </div>
+        <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:1px; background:rgba(194,65,12,.14); border:1px solid rgba(194,65,12,.14); max-width:520px;">
+          <div style="background:#F8F5EF; padding:16px 18px;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:22px; color:#C2410C;">12</div>
+            <div style="font-size:12px; color:#7B7369; letter-spacing:.06em; margin-top:4px;">MATERIALS</div>
+          </div>
+          <div style="background:#F8F5EF; padding:16px 18px;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:22px; color:#C2410C;">QSPI</div>
+            <div style="font-size:12px; color:#7B7369; letter-spacing:.06em; margin-top:4px;">NO LVGL, NO FB</div>
+          </div>
+          <div style="background:#F8F5EF; padding:16px 18px;">
+            <div style="font-family:'JetBrains Mono',monospace; font-size:22px; color:#C2410C;">6</div>
+            <div style="font-size:12px; color:#7B7369; letter-spacing:.06em; margin-top:4px;">SCENE SLOTS</div>
+          </div>
+        </div>
+      </div>
+
+      <div style="display:grid; place-items:center;">
+        <div style="position:relative; width:100%; max-width:460px; aspect-ratio:1;">
+          <div style="position:absolute; inset:-8%; border-radius:50%; border:1px dashed rgba(194,65,12,.16);"></div>
+          <div style="position:absolute; inset:0; border-radius:50%; padding:14px; background:linear-gradient(150deg,#3A332A,#15120E 45%,#2A241C); box-shadow:0 30px 70px rgba(0,0,0,.28), inset 0 2px 3px rgba(255,225,175,.14);">
+            <div style="position:relative; width:100%; height:100%; border-radius:50%; overflow:hidden; background:#0A0806; box-shadow:inset 0 0 40px rgba(0,0,0,.9), inset 0 0 0 1px rgba(194,65,12,.18);">
+              <canvas id="devsand" style="width:100%; height:100%; display:block; image-rendering:pixelated;"></canvas>
+              <div style="position:absolute; inset:0; border-radius:50%; pointer-events:none; background:radial-gradient(circle at 32% 22%, rgba(255,255,255,.09), transparent 46%);"></div>
+            </div>
+          </div>
+          <div style="position:absolute; right:-2%; top:44%; width:16px; height:54px; border-radius:3px; background:linear-gradient(90deg,#241E17,#4A4034); box-shadow:2px 0 6px rgba(0,0,0,.6);"></div>
+        </div>
+        <div style="margin-top:22px; font-family:'JetBrains Mono',monospace; font-size:12px; color:#7B7369; letter-spacing:.08em; text-align:center;">
+          live sim, drag inside the glass to pour
+        </div>
+      </div>
+    </div>
+
+    <div id="flash" style="border:1px solid rgba(194,65,12,.2); background:linear-gradient(180deg,#FBF9F5,#F3EFE7); box-shadow:0 20px 50px rgba(0,0,0,.12); scroll-margin-top:24px;">
+      <div style="display:flex; align-items:center; justify-content:space-between; gap:18px; padding:20px 28px; border-bottom:1px solid rgba(194,65,12,.16); flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:12px;">
+          <span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.18em; color:#C2410C;">01 — WEB FLASHER</span>
+          <span style="font-size:14px; color:#7B7369;">flashes over Web Serial, straight from this tab</span>
+        </div>
+        <span id="verFlash" style="font-family:'JetBrains Mono',monospace; font-size:12px; color:#7B7369;">firmware —</span>
+      </div>
+
+      <div class="flashgrid">
+        <div class="flashleft">
+          <button id="install" class="btn-install" disabled>INSTALL FIRMWARE</button>
+
+          <label style="display:flex; align-items:center; gap:9px; margin-top:16px; font-size:14px; color:#57514A; cursor:pointer;">
+            <input type="checkbox" id="erase" style="accent-color:#C2410C; width:15px; height:15px;">
+            Erase entire flash first
+          </label>
+
+          <div id="status" style="margin-top:24px; font-family:'JetBrains Mono',monospace; font-size:13.5px; line-height:1.5; min-height:42px; color:#57514A;">Loading firmware…</div>
+
+          <div style="margin-top:12px; height:12px; background:rgba(0,0,0,.12); border:1px solid rgba(194,65,12,.2); overflow:hidden;">
+            <div id="fill" style="height:100%; width:0%; background:repeating-linear-gradient(90deg,#C2410C 0,#C2410C 6px,#A8360A 6px,#A8360A 12px); transition:width .15s linear;"></div>
+          </div>
+
+          <div style="margin-top:24px; padding-top:20px; border-top:1px solid rgba(194,65,12,.14); font-size:13.5px; line-height:1.6; color:#7B7369; text-wrap:pretty;">
+            Needs Chrome or Edge on desktop, Firefox and Safari have no Web Serial. If no port shows up hold <span style="font-family:'JetBrains Mono',monospace; color:#57514A; background:rgba(0,0,0,.05); padding:1px 5px;">BOOT</span> while plugging the board in and try again, the firmware's USB drive mode likes to hog the port.
+          </div>
+        </div>
+
+        <div style="padding:22px 24px; background:#1C1815;">
+          <div style="display:flex; align-items:center; gap:8px; margin-bottom:10px; font-family:'JetBrains Mono',monospace; font-size:11px; letter-spacing:.16em; color:#968E83;">
+            <span style="width:6px; height:6px; border-radius:50%; background:#C2410C;"></span> SERIAL LOG
+          </div>
+          <div id="log" style="height:280px; overflow-y:auto; font-family:'JetBrains Mono',monospace; font-size:13px; line-height:1.45; white-space:pre-wrap; word-break:break-all; color:#9E937F;"><span style="color:#968E83">Waiting for install…
+</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="materials" style="padding:96px 0 0; scroll-margin-top:24px;">
+      <div style="display:flex; align-items:baseline; gap:16px; margin-bottom:10px;">
+        <span style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.18em; color:#C2410C;">02 — MATERIALS</span>
+      </div>
+      <h2 class="h-sec">Density <span style="color:#7B7369;">is</span> the physics.</h2>
+      <p style="margin:0 0 34px; font-size:17px; line-height:1.55; color:#57514A; max-width:56ch; text-wrap:pretty;">Twelve materials, ordered by density, and that ordering is the physics: a cell can move into any neighbour holding something strictly lighter.</p>
+
+      <div class="matgrid">
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#D9A441;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">SAND</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Granular. Heaps hold a 45° angle of repose.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#8A6A3F;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">DIRT</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Granular, heavier, dissolves in acid.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#3F8FD0;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">WATER</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Liquid, spreads until level. Quenches lava into rock.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#A8D84B;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">ACID</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Liquid. Eats sand, dirt, rock and wood, venting gas.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#E5533D;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">LAVA</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Liquid. Ignites wood, turns to rock in water.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#F28C28;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">FIRE</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Burns wood, needs air, climbs against gravity, dies into smoke.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#6B6B6B;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">SMOKE</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Rises and thins out into nothing.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#B9C9D0;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">STEAM</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Rises, condenses back to water when trapped.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#C8E08A;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">ACID GAS</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Rises and thins out, the by-product of dissolving.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#7A5230;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">WOOD</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Static, but it burns, and acid takes it too.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#6F6A63;"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">ROCK</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">Static. Only acid gets through it.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:20px;">
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;"><span style="width:14px; height:14px; background:#2E2A24; box-shadow:inset 0 0 0 1px rgba(194,65,12,.35);"></span><span style="font-family:'JetBrains Mono',monospace; font-size:14px; letter-spacing:.06em;">WALL</span></div>
+          <div style="font-size:13.5px; line-height:1.5; color:#7B7369;">The bowl itself.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="duo">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.18em; color:#C2410C; margin-bottom:10px;">03 — CONTROLS</div>
+        <h2 class="h-sec">One button,<br>full-screen rings.</h2>
+        <p style="margin:0 0 26px; font-size:17px; line-height:1.55; color:#57514A; text-wrap:pretty;">Menus are full screen pie rings, wedge segments running to the edge of the glass, translucent over the paused scene. Drag to a wedge and lift to pick, lift on the empty centre to cancel.</p>
+        <div style="display:grid; gap:1px; background:rgba(194,65,12,.14); border:1px solid rgba(194,65,12,.14);">
+          <div style="background:#F8F5EF; padding:14px 18px; display:grid; grid-template-columns:minmax(150px,.9fr) 1.4fr; gap:18px; align-items:baseline;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#C2410C;">touch / drag</span>
+            <span style="font-size:14.5px; color:#57514A;">paint the selected material</span>
+          </div>
+          <div style="background:#F8F5EF; padding:14px 18px; display:grid; grid-template-columns:minmax(150px,.9fr) 1.4fr; gap:18px; align-items:baseline;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#C2410C;">Key1 click</span>
+            <span style="font-size:14.5px; color:#57514A;">materials ring (centre: tools)</span>
+          </div>
+          <div style="background:#F8F5EF; padding:14px 18px; display:grid; grid-template-columns:minmax(150px,.9fr) 1.4fr; gap:18px; align-items:baseline;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#C2410C;">Key1 hold 0.5s</span>
+            <span style="font-size:14.5px; color:#57514A;">system menu, save/load/import, settings, battery, power</span>
+          </div>
+          <div style="background:#F8F5EF; padding:14px 18px; display:grid; grid-template-columns:minmax(150px,.9fr) 1.4fr; gap:18px; align-items:baseline;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#C2410C;">Key1 click (menu open)</span>
+            <span style="font-size:14.5px; color:#57514A;">close it</span>
+          </div>
+          <div style="background:#F8F5EF; padding:14px 18px; display:grid; grid-template-columns:minmax(150px,.9fr) 1.4fr; gap:18px; align-items:baseline;">
+            <span style="font-family:'JetBrains Mono',monospace; font-size:13px; color:#C2410C;">Key1 hold at power-on</span>
+            <span style="font-size:14.5px; color:#57514A;">redo touch calibration, TAP THE DOT, twice</span>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.18em; color:#C2410C; margin-bottom:10px;">04 — DEMO</div>
+        <h2 class="h-sec">See it pour.</h2>
+        <p style="margin:0 0 26px; font-size:17px; line-height:1.55; color:#57514A; text-wrap:pretty;">Rendering goes straight to the panel over QSPI, no LVGL, no framebuffer in PSRAM. Bands get painted and pushed from internal DMA memory with per-row dirty tracking so only what changed gets sent.</p>
+        <div style="position:relative; aspect-ratio:16/9; overflow:hidden; border:1px solid rgba(194,65,12,.2); box-shadow:0 14px 34px rgba(0,0,0,.14);">
+          <iframe src="https://www.youtube-nocookie.com/embed/Gdmk3TZFWq0" title="Sand Sim demo video" loading="lazy" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen style="position:absolute; inset:0; width:100%; height:100%; border:0;"></iframe>
+        </div>
+      </div>
+    </div>
+
+    <div id="scenes" style="padding:96px 0 0; scroll-margin-top:24px;">
+      <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.18em; color:#C2410C; margin-bottom:10px;">05 — SCENES &amp; PNG IMPORT</div>
+      <h2 class="h-sec" style="margin-bottom:34px;">Drop a PNG on the drive.</h2>
+      <div class="scenegrid">
+        <div style="background:#F8F5EF; padding:26px 24px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.14em; color:#C2410C; margin-bottom:12px;">SIX SLOTS</div>
+          <div style="font-size:15px; line-height:1.6; color:#57514A; text-wrap:pretty;">Scene slots live in a raw flash partition, cells plus colour palette. Slot 1 gets restored at boot.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:26px 24px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.14em; color:#C2410C; margin-bottom:12px;">USB DRIVE</div>
+          <div style="font-size:15px; line-height:1.6; color:#57514A; text-wrap:pretty;">The 4&nbsp;MB FAT partition mounts on your host (settings ring → USB). Drop in <span style="font-family:'JetBrains Mono',monospace; color:#1A1713;">slot1.png</span> … <span style="font-family:'JetBrains Mono',monospace; color:#1A1713;">slot6.png</span> and import from the system menu.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:26px 24px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.14em; color:#C2410C; margin-bottom:12px;">NEAREST MATERIAL</div>
+          <div style="font-size:15px; line-height:1.6; color:#57514A; text-wrap:pretty;">Images get fitted to the screen and every pixel becomes the material with the nearest colour. Grain size comes from the image's own resolution, 233×233 down to 77×77 for 1:1 pixels.</div>
+        </div>
+      </div>
+      <div class="modegrid">
+        <div style="background:#F8F5EF; padding:26px 24px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.14em; color:#7B7369; margin-bottom:12px;">MODE — DEFAULT</div>
+          <div style="font-size:15px; line-height:1.6; color:#57514A; text-wrap:pretty;">Recoloured and re-grained, like it was painted on by hand.</div>
+        </div>
+        <div style="background:#F8F5EF; padding:26px 24px;">
+          <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.14em; color:#7B7369; margin-bottom:12px;">MODE — TOP-RIGHT PIXEL PURE WHITE</div>
+          <div style="font-size:15px; line-height:1.6; color:#57514A; text-wrap:pretty;">The scene keeps the image's own colours via per-material palette overrides that travel with the saved scene.</div>
+        </div>
+      </div>
+      <p style="margin:22px 0 0; font-size:14.5px; line-height:1.6; color:#7B7369; max-width:70ch; text-wrap:pretty;">A <span style="font-family:'JetBrains Mono',monospace; color:#57514A;">README.txt</span> with the resolution table and the exact material colour ramps gets generated onto the drive from the renderer's own palette data.</p>
+    </div>
+
+    <div class="buildband">
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace; font-size:12px; letter-spacing:.18em; color:#C2410C; margin-bottom:10px;">06 — BUILD FROM SOURCE</div>
+        <div style="font-size:17px; line-height:1.6; color:#57514A; text-wrap:pretty; max-width:60ch;">ESP-IDF <strong style="color:#1A1713; font-weight:600;">v5.5.x</strong>, target <span style="font-family:'JetBrains Mono',monospace; color:#1A1713;">esp32s3</span>. Every push to <span style="font-family:'JetBrains Mono',monospace; color:#1A1713;">main</span> gets built by CI and published here.</div>
+      </div>
+      <div style="font-family:'JetBrains Mono',monospace; font-size:14px; color:#C2410C; background:rgba(0,0,0,.05); border:1px solid rgba(194,65,12,.2); padding:16px 20px; white-space:nowrap;">idf.py build flash monitor</div>
+    </div>
+
+    <div style="margin-top:56px; padding-top:22px; border-top:1px solid rgba(194,65,12,.14); display:flex; gap:26px; flex-wrap:wrap; font-family:'JetBrains Mono',monospace; font-size:12.5px; color:#968E83;">
+      <a href="https://github.com/nurdism/esp_sand_sim" class="footlink">github.com/nurdism/esp_sand_sim</a>
+      <a href="https://youtu.be/Gdmk3TZFWq0" class="footlink">demo video</a>
+      <a href="https://www.waveshare.com/esp32-s3-touch-amoled-1.75c.htm" class="footlink">buy the board</a>
+      <a href="https://docs.waveshare.com/ESP32-S3-Touch-AMOLED-1.75C" class="footlink">board wiki</a>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ---- falling sand inside the device "glass" --------------------------------
+(() => {
+  const canvas = document.getElementById("devsand");
+  if (!canvas || matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const ctx = canvas.getContext("2d");
+  const off = document.createElement("canvas");
+  const octx = off.getContext("2d");
+  const CELL = 3;
+  const HEX = ["#F4D98C", "#E8C06A", "#D9A441", "#C08A2E", "#A37426", "#8A6A28"];
+  const palette = HEX.map((h) => {
+    const n = parseInt(h.slice(1), 16);
+    return (225 << 24) | ((n & 0xff) << 16) | (n & 0xff00) | (n >> 16); // ABGR
+  });
+  let W = 0, H = 0, grid, mask, img, buf, count = 0, maxGrains = 0;
+
+  function resize() {
+    const r = canvas.getBoundingClientRect();
+    const w = Math.max(120, Math.round(r.width)), h = Math.max(120, Math.round(r.height));
+    W = Math.ceil(w / CELL); H = Math.ceil(h / CELL);
+    canvas.width = W * CELL; canvas.height = H * CELL;
+    off.width = W; off.height = H;
+    grid = new Uint8Array(W * H);
+    mask = new Uint8Array(W * H);
+    const cx = (W - 1) / 2, cy = (H - 1) / 2, rad = Math.min(cx, cy) - 0.5;
+    for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+      const dx = x - cx, dy = y - cy;
+      mask[y * W + x] = dx * dx + dy * dy <= rad * rad ? 1 : 0;
+    }
+    img = octx.createImageData(W, H);
+    buf = new Uint32Array(img.data.buffer);
+    count = 0;
+    maxGrains = Math.floor(W * H * 0.30);
+  }
+  resize();
+  new ResizeObserver(resize).observe(canvas);
+
+  function spawn(x, y) {
+    x |= 0; y |= 0;
+    if (x < 0 || x >= W || y < 0 || y >= H) return;
+    const i = y * W + x;
+    if (!mask[i] || grid[i]) return;
+    grid[i] = 1 + ((Math.random() * palette.length) | 0);
+    count++;
+  }
+
+  canvas.addEventListener("pointermove", (e) => {
+    const r = canvas.getBoundingClientRect();
+    const gx = ((e.clientX - r.left) / r.width) * W;
+    const gy = ((e.clientY - r.top) / r.height) * H;
+    for (let n = 0; n < 6; n++)
+      spawn(gx + (Math.random() * 5 - 2.5), gy + (Math.random() * 3 - 1.5));
+  }, { passive: true });
+
+  const free = (i) => mask[i] && !grid[i];
+
+  function step(t) {
+    const streamX = W / 2 + (W * 0.24) * Math.sin(t * 0.00023) * Math.sin(t * 0.00005 + 1.7);
+    for (let n = 0; n < 3; n++) spawn(streamX + (Math.random() * 4 - 2), H * 0.14);
+    for (let y = H - 2; y >= 0; y--) {
+      const row = y * W, ltr = (y & 1) === 0;
+      for (let i = 0; i < W; i++) {
+        const x = ltr ? i : W - 1 - i;
+        const idx = row + x, g = grid[idx];
+        if (!g) continue;
+        const below = idx + W;
+        if (free(below)) { grid[below] = g; grid[idx] = 0; continue; }
+        const d = Math.random() < 0.5 ? 1 : -1;
+        if (x + d >= 0 && x + d < W && free(idx + d) && free(below + d)) {
+          grid[below + d] = g; grid[idx] = 0; continue;
+        }
+        if (x - d >= 0 && x - d < W && free(idx - d) && free(below - d)) {
+          grid[below - d] = g; grid[idx] = 0;
+        }
+      }
+    }
+    // erode from the bottom of the bowl once it gets full
+    if (count > maxGrains) {
+      for (let n = 0; n < 90; n++) {
+        const x = (Math.random() * W) | 0, y = H - 1 - ((Math.random() * (H * 0.12)) | 0);
+        const i = y * W + x;
+        if (grid[i]) { grid[i] = 0; count--; }
+      }
+    }
+  }
+
+  function draw() {
+    buf.fill(0);
+    for (let i = 0; i < grid.length; i++) if (grid[i]) buf[i] = palette[grid[i] - 1];
+    octx.putImageData(img, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.drawImage(off, 0, 0, canvas.width, canvas.height);
+  }
+
+  function frame(t) {
+    step(t); draw();
+    requestAnimationFrame(frame);
+  }
+  requestAnimationFrame(frame);
+})();
+</script>
+
+<script type="module">
+// ---- web flasher ------------------------------------------------------------
+const installBtn = document.getElementById("install");
+const eraseCb    = document.getElementById("erase");
+const statusEl   = document.getElementById("status");
+const fillEl     = document.getElementById("fill");
+const logEl      = document.getElementById("log");
+const verTop     = document.getElementById("verTop");
+const verFlash   = document.getElementById("verFlash");
+
+const COLORS = { plain: "#B8AFA3", ok: "#9ECF6B", err: "#E5533D" };
+function log(text, kind) {
+  const span = document.createElement("span");
+  span.style.color = COLORS[kind] || COLORS.plain;
+  span.textContent = text;
+  logEl.appendChild(span);
+  logEl.scrollTop = logEl.scrollHeight;
+}
+const terminal = {
+  clean()        { logEl.textContent = ""; },
+  writeLine(d)   { log(d + "\n"); },
+  write(d)       { log(d); },
+};
+function setStatus(text, kind) {
+  statusEl.textContent = text;
+  statusEl.style.color = kind === "err" ? "#E5533D" : kind === "ok" ? "#567D2E" : "#57514A";
+}
+function setProgress(pct) {
+  fillEl.style.width = Math.min(100, pct).toFixed(1) + "%";
+}
+function toBinaryString(buf) {
+  const u8 = new Uint8Array(buf);
+  let s = "";
+  for (let i = 0; i < u8.length; i += 0x8000)
+    s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return s;
+}
+
+let ESPLoader, Transport, CryptoJS, manifest, parts;
+
+async function boot() {
+  if (!navigator.serial) {
+    setStatus("No Web Serial in this browser, use Chrome or Edge on desktop.", "err");
+    return;
+  }
+  try {
+    const mod = await import("https://unpkg.com/esptool-js@0.5.4/bundle.js");
+    const crypto = await import("https://cdn.jsdelivr.net/npm/crypto-js@4.2.0/+esm");
+    ESPLoader = mod.ESPLoader; Transport = mod.Transport; CryptoJS = crypto.default || crypto;
+  } catch (e) {
+    setStatus("Could not load the flashing tools: " + (e.message || e), "err");
+    return;
+  }
+  try {
+    const res = await fetch("manifest.json", { cache: "no-store" });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    manifest = await res.json();
+    verTop.textContent = verFlash.textContent = "firmware " + manifest.version;
+    const build = manifest.builds[0];
+    parts = await Promise.all(build.parts.map(async (p) => {
+      const r = await fetch(p.path, { cache: "no-store" });
+      if (!r.ok) throw new Error("fetch " + p.path + ": HTTP " + r.status);
+      const buf = await r.arrayBuffer();
+      return { address: p.offset, data: toBinaryString(buf), bytes: buf.byteLength };
+    }));
+    const total = parts.reduce((n, p) => n + p.bytes, 0);
+    setStatus("Ready, " + (total / 1048576).toFixed(2) + " MB image, " + build.chipFamily, "ok");
+    installBtn.disabled = false;
+  } catch (err) {
+    setStatus("Could not load firmware: " + (err.message || err), "err");
+  }
+}
+
+async function install() {
+  installBtn.disabled = true;
+  setProgress(0);
+  logEl.textContent = "";
+  let transport = null;
+  try {
+    const device = await navigator.serial.requestPort();
+    transport = new Transport(device, true);
+    const loader = new ESPLoader({ transport, baudrate: 921600, terminal });
+    setStatus("Connecting… (if it hangs, hold BOOT and replug)");
+    const chip = await loader.main();
+    log("Connected: " + chip + "\n", "ok");
+    const family = manifest.builds[0].chipFamily;
+    if (!chip.toUpperCase().includes(family.toUpperCase()))
+      throw new Error("This firmware is for " + family + ", but the connected chip is " + chip + ".");
+    const totalBytes = parts.reduce((n, p) => n + p.bytes, 0);
+    setStatus("Flashing " + (totalBytes / 1048576).toFixed(2) + " MB…");
+    await loader.writeFlash({
+      fileArray: parts.map((p) => ({ data: p.data, address: p.address })),
+      flashSize: "keep", flashMode: "keep", flashFreq: "keep",
+      eraseAll: eraseCb.checked, compress: true,
+      reportProgress(fileIndex, written, total) {
+        const done = parts.slice(0, fileIndex).reduce((n, p) => n + p.bytes, 0)
+          + (written / total) * parts[fileIndex].bytes;
+        const pct = (done / totalBytes) * 100;
+        setProgress(pct);
+        setStatus("Flashing… " + pct.toFixed(0) + "% (" + (done / 1048576).toFixed(2) + " / " + (totalBytes / 1048576).toFixed(2) + " MB)");
+      },
+      calculateMD5Hash: (image) => CryptoJS.MD5(CryptoJS.enc.Latin1.parse(image)).toString(),
+    });
+    setProgress(100);
+    log("\nFlash complete, resetting board…\n", "ok");
+    try { await loader.hardReset(); } catch { /* some adapters can't toggle RTS */ }
+    setStatus("Done, the board is rebooting into the sim.", "ok");
+  } catch (err) {
+    log("\n" + (err.message || err) + "\n", "err");
+    setStatus("Failed: " + (err.message || err), "err");
+    setProgress(0);
+  } finally {
+    if (transport) { try { await transport.disconnect(); } catch {} }
+    installBtn.disabled = false;
+  }
+}
+
+installBtn.addEventListener("click", install);
+boot();
+</script>
+</body>
+</html>
